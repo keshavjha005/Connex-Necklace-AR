@@ -1,65 +1,84 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/2.0.8/aframe/build/aframe-ar.js"></script> 
-    <script src="https://libs.zapper.com/zapper-aframe/0.0.35/zapper-aframe.js"></script>
-    <title>connex Necklace AR </title>
+  <meta charset="UTF-8">
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/2.0.8/aframe/build/aframe-ar.js"></script>
+  <script src="https://libs.zapper.com/zapper-aframe/0.0.35/zapper-aframe.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <title>connex Necklace AR</title>
 
-    <style>
-        html, 
-        body {
-            height: 100%;
-            width: 100%;
-            margin: 0;
-            overflow: hidden;
-        }
-    </style>
+  <style>
+    html, 
+    body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+  </style>
 
 </head>
 
 <body>
-    <a-scene>
-        <a-assets>
-            <a-asset-item id="face-occluder" src="face_occluder.glb"></a-asset-item>
-            <a-asset-item id="necklace" src="necklace.glb"></a-asset-item>
-        </a-assets>
+  <a-scene>
+    <a-assets>
+      <a-asset-item id="face-occluder" src="face_occluder.glb"></a-asset-item>
+      <a-asset-item id="necklace" src="necklace.glb"></a-asset-item>
+    </a-assets>
 
-        <!-- Specify facingMode attribute to use the front camera -->
-        <a-entity camera zappar-camera="facingMode: user"></a-entity>
+    <!-- Specify facingMode attribute to use the front camera -->
+    <a-entity camera zappar-camera="facingMode: user; exaggerated: true;"></a-entity>
 
-        <!-- Load the face occluder model -->
-        <a-entity gltf-model="#face-occluder" zappar-face-occluder></a-entity>
+    <!-- Load the face occluder model -->
+    <a-entity gltf-model="#face-occluder" zappar-face-occluder></a-entity>
 
-        <a-entity id="face-group" zappar-face>
-            <!-- Place 3D object to track from the center of the face -->
-            <a-entity gltf-model="#necklace" position="0 -0.01 -0.1" scale="0.08 0.08 0.08" rotation="0 90 0"></a-entity>
+    <a-entity id="face-group" zappar-face>
+      <!-- Place 3D object to track from the center of the face -->
+      <a-entity id="necklace" gltf-model="#necklace" position="0 -0.01 -0.1" scale="0.03 0.08 0.05" rotation="0 90 0"></a-entity>
+    </a-entity>
 
-            <!-- Add animation to move the necklace with the face -->
-            <a-animation attribute="position"
-                dur="200"
-                fill="forwards"
-                repeat="indefinite"
-                direction="alternate"
-                to="0 0 0.1"></a-animation>
-        </a-entity>
-    </a-scene>
+    <!-- Add script to automatically align the necklace with the user's neck -->
+    <script>
+      // Get references to the face group and necklace entities
+      var faceGroup = document.getElementById('face-group');
+      var necklace = document.getElementById('necklace');
 
-     <!-- Capture Button -->
-     <button id="captureButton">Capture</button>
+      // Use Zappar Face Tracking API to detect the user's face and neck
+      var faceTracker = new Zappar.FaceTracker();
+      faceTracker.addEventListener('faceDetected', function(event) {
+        // Get the face and neck coordinates
+        var faceCoords = event.detail.faceCoords;
+        var neckCoords = event.detail.neckCoords;
 
-     <script>
-         // Get reference to the capture button
-         var captureButton = document.getElementById('captureButton');
- 
-         // Add click event listener to the capture button
-         captureButton.addEventListener('click', function() {
-             // Capture the current scene or take a screenshot here
-             // For example, you can use a library like html2canvas to capture the scene
-             // Replace the code below with the actual capture logic
-             alert('Capture button clicked! Replace this with your capture logic.');
-         });
-     </script>
+        // Update the necklace position and rotation to match the user's neck
+        necklace.setAttribute('position', `0 ${neckCoords.y - 0.01} ${neckCoords.z - 0.1}`);
+        necklace.setAttribute('rotation', `0 ${neckCoords.y * 90} 0`);
+      });
+    </script>
+  </a-scene>
+
+  <!-- Capture Button -->
+  <button id="captureButton">Capture</button>
+
+  <script>
+    // Get reference to the capture button
+    var captureButton = document.getElementById('captureButton');
+
+    // Add click event listener to the capture button
+    captureButton.addEventListener('click', function() {
+      // Capture the current scene or take a screenshot here
+      // For example, you can use a library like html2canvas to capture the scene
+      html2canvas(document.body).then(function(canvas) {
+        // Save the canvas as an image
+        var image = canvas.toDataURL("image/png");
+        // Do something with the image, e.g., upload it to a server
+        console.log(image);
+      });
+    });
+  </script>
 </body>
 </html>
